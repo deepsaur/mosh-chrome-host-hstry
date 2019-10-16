@@ -47,7 +47,7 @@ td {
             <td>Mode:</td>
             <td>
               <label>
-                <input id="ssh-mode" name="mode" type="radio" value="ssh" checked>SSH</input>
+                <input id="ssh-mode" name="mode" type="radio" value="ssh">SSH</input>
               </label>
               <label>
                 <input id="manual-mode" name="mode" type="radio" value="manual">Manual</input>
@@ -61,6 +61,12 @@ td {
           <tr>
             <td>Hostname or IP address:</td>
             <td><input id="addr" type="text"></td>
+          </tr>
+          <tr>
+            <td>Hostname or IP history:</td>
+            <td><select id="hist-addr">
+                <option value="-1" disabled>Select...</option>
+              </select></td>
           </tr>
           <tr>
             <td>Address family:</td>

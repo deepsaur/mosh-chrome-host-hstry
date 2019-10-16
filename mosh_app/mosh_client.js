@@ -60,9 +60,13 @@ window.onload = function() {
   var prefsLink = document.querySelector('#prefs');
   prefsLink.onclick = onPrefsClick;
   var form = document.querySelector('#args');
-  form.onsubmit = function() {
-    return false;
-  };
+  form.onsubmit = function() { return false; };
+  var addrhist = document.querySelector('#hist-addr');
+  addrhist.onchange = function() {
+    if(document.activeElement === addrhist || addrhist.contains(document.activeElement) ) {
+      document.querySelector('#addr').value = addrhist.value; console.log("set addr value:" + addrhist.value)
+    };
+  }
 
   // Add drop-down menu for MOSH_ESCAPE_KEY, listing all ASCII characters from
   // 0x01 to 0x7F, as well an initial entry "default" to not pass
@@ -152,6 +156,8 @@ var kSyncFieldNames = [
   'mosh-escape-key',
   'google-public-dns',
   'trust-sshfp',
+  'mode',
+  'hist-addr',
 ];
 
 function loadFields() {
@@ -160,6 +166,30 @@ function loadFields() {
     var key = 'field_' + field;
     chrome.storage.local.get(key, function(o) {
       if (o[key] !== undefined) {
+        if (form[field] instanceof RadioNodeList){
+          var radios = form[field];
+          for (var i=0, len=radios.length; i<len; i++) {
+            if ( radios[i].value === o[key] ) { // radio checked?
+              radios[i].checked = true;
+              console.log(radios[i].value + " is selected , storage val:" + o[key]);
+              updateMode();
+              break; // and break out of for loop
+            }
+          }
+        }
+        else if (form[field].type === 'select-one' &&  field.includes('hist-')) {
+          var oldSelVals = o[key];
+          console.log("saved sels were: " + oldSelVals);
+          if( oldSelVals ) {
+            for (var selopt in oldSelVals) {
+              var opt = document.createElement("option");
+              opt.value = selopt;
+              opt.text = selopt;
+              form[field].add(opt, null);
+            }
+          }
+        }
+        else
         if (form[field].type === 'checkbox') {
           form[field].checked = o[key] === 'true' ? true : false;
         } else {
@@ -179,13 +209,58 @@ function saveFields() {
   var form = document.querySelector('#args');
   kSyncFieldNames.forEach(function(field) {
     var key = 'field_' + field;
+    if (form[field] instanceof RadioNodeList){
+      var radios = form[field];
+      var o = {};
+      for (var i=0, len=radios.length; i<len; i++) {
+        if ( radios[i].checked ) { // radio checked?
+            o[key] = radios[i].value; // if so, hold its value in val
+            chrome.storage.local.set(o);
+            break; // and break out of for loop
+        }
+      }
+    }
+      else if (form[field].type === 'select-one' &&  field.includes('hist-')) {
+         var oldSelVals = null;
+         chrome.storage.local.get(key, function(val)  {
+           oldSelVals = val[key];
+           
+             if( oldSelVals ) {
+                 
+             }
+             else  {
+                 oldSelVals = {};
+             }
+             var newInput = form[field.substring(5)].value;
+             if( ! (newInput in oldSelVals) )  {
+                 oldSelVals[newInput] = newInput;
+                 var o = {};
+                 o[key] = oldSelVals;
+                 chrome.storage.local.set(o);
+                 chrome.storage.local.get(key, function(val)  { //{key: []}, function(val)  {
+                   console.log("just saved" + val) ;//val[key];
+                   for(var storageKey in val){
+                   //val.forEach(function(storageKey) {
+                       console.log("just saved, all storage key:" + storageKey +" val:" + val[storageKey]);
+                       for(var objKey in val[storageKey]){
+                         //val.forEach(function(storageKey) {
+                         console.log("just saved, all storage val inner key:" + objKey +" val:" + val[storageKey][objKey]);
+                      };
+                   };
+                 });
+              }
+              console.log("saved sels are: " + oldSelVals);
+         });
+      }
+    else
     if (form[field].value === '') {
       chrome.storage.local.remove(key);
     } else {
       var o = {};
       if (form[field].type === 'checkbox') {
         o[key] = form[field].checked ? 'true' : 'false';
-      } else {
+      } 
+      else {
         o[key] = form[field].value;
       }
       chrome.storage.local.set(o);
