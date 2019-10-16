@@ -42,3 +42,5 @@ Building
 
   To distribute the app, build the release track and upload the .zip file to
   the Chrome Web Store.
+  
+  Check fork ../../gordol/mosh-chrome it has changes to use latest libapps.  
